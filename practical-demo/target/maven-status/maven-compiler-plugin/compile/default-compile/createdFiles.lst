@@ -1,0 +1,6 @@
+com\demo\App.class
+com\demo\AppConfig$JacksonMessagePackProvider.class
+com\demo\CalcEndpoint.class
+com\demo\AppConfig$JerseyConfig.class
+com\demo\CalcEndpoint$Result.class
+com\demo\AppConfig.class

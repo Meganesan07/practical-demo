@@ -1,40 +1,37 @@
 package com.demo;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.jayway.restassured.RestAssured;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import io.restassured.RestAssured;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.msgpack.jackson.dataformat.MessagePackFactory;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.test.IntegrationTest;
-import org.springframework.boot.test.SpringApplicationConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-import org.springframework.test.context.web.WebAppConfiguration;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.web.server.LocalServerPort;
 
-import static com.jayway.restassured.RestAssured.given;
-import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertThat;
+import static io.restassured.RestAssured.given;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-@RunWith(SpringJUnit4ClassRunner.class)
-@SpringApplicationConfiguration(classes = App.class)
-@WebAppConfiguration
-@IntegrationTest({"server.port:0"})
+// This single annotation replaces the 4 old ones! It tells Spring to start up the app on a random port for testing.
+@SpringBootTest(classes = App.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class CalcEndpointTest {
-    @Value("${local.server.port}")
+
+    // Modern way to grab the random port Spring just started
+    @LocalServerPort
     int port;
 
     ObjectMapper objectMapper = new ObjectMapper(new MessagePackFactory());
 
-    @Before
+    // @Before is now @BeforeEach in JUnit 5
+    @BeforeEach
     public void setUp() throws Exception {
         RestAssured.port = port;
     }
 
-
+    // @Test now comes from the org.junit.jupiter.api package
     @Test
     public void testCalc() throws Exception {
         byte[] response = given()
+                .accept("application/x-msgpack") // <-- ADD THIS LINE HERE
                 .param("left", 100)
                 .param("right", 200)
                 .log().all()
@@ -45,8 +42,9 @@ public class CalcEndpointTest {
                 .asByteArray();
 
         CalcEndpoint.Result result = objectMapper.readValue(response, CalcEndpoint.Result.class);
-        assertThat(result.getAnswer(), is(300L));
-        assertThat(result.getLeft(), is(100));
-        assertThat(result.getRight(), is(200));
+        
+        assertEquals(300L, result.getAnswer());
+        assertEquals(100, result.getLeft());
+        assertEquals(200, result.getRight());
     }
 }
